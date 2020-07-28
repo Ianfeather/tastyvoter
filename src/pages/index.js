@@ -12,28 +12,35 @@ Amplify.configure(config);
 const Index = ({ title, description, ...props }) => {
 
   const [recipes, setRecipes] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [introTimer, setIntroTimer] = useState(5);
+  const [votingTimer, setVotingTimer] = useState(60);
 
-
-  // This will only run once on load
   async function getRecipes() {
     const response = await API.graphql(graphqlOperation(queries.listRecipes))
     setRecipes(response.data.listRecipes.items);
   };
 
-  useEffect(() => { getRecipes() }, []);
+  useEffect(() => {
+    setIsAdmin(window.location.search.match(/admin=true/))
+    getRecipes();
+  }, []);
+
+  // Start the intro Timer
+  useEffect(() => {
+    if (introTimer > 0) {
+      let countdown = setTimeout(() => {
+        setIntroTimer(introTimer - 1);
+      }, 1000);
+      return () => clearTimeout(countdown);
+    }
+  }, [introTimer]);
 
   useEffect(() => {
-    // doesn't seem right to be setting up the listener each time?
     const subscription = API.graphql(graphqlOperation(subscriptions.onCastVote)).subscribe({
       next: voteCasted => {
-        const id = voteCasted.value.data.onCastVote.id;
-        const votes = voteCasted.value.data.onCastVote.votes;
-        setRecipes(recipes.map(recipe => {
-          if (recipe.id !== id) {
-            return recipe;
-          }
-          return { ...recipe, votes };
-        }));
+        const { id, votes } = voteCasted.value.data.onCastVote;
+        setRecipes(recipes.map(recipe => recipe.id !== id ? recipe : { ...recipe, votes }));
       }
     });
     return () => subscription.unsubscribe()
@@ -44,13 +51,29 @@ const Index = ({ title, description, ...props }) => {
     API.graphql(graphqlOperation(mutations.castVote, { input: { id } }));
   }
 
+  const onReset = (e) => {
+    e.preventDefault();
+    setIntroTimer(5);
+    // would be nice to do these in one operation but aws docs aren't very scannable
+    recipes.forEach(({id}) => {
+      API.graphql(graphqlOperation(mutations.updateRecipe, { input: { id, votes: 0 } }));
+    });
+  }
+
   const totalVotes = recipes.reduce((acc, next) => acc + next.votes, 0);
 
   return (
     <Layout pageTitle={title} description={description}>
       {
-        recipes.map(({ name, id, canonicalUrl, imageUrl, votes }) => {
-          const width = (votes / totalVotes) * 100;
+        introTimer > 0 && (
+          <div className={styles.introTimerContainer}>
+            <div className={styles.introTimer}>{introTimer}</div>
+          </div>
+        )
+      }
+      {
+        introTimer === 0 && recipes.map(({ name, id, canonicalUrl, imageUrl, votes }) => {
+          const percentOfVote = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
           return (
             <div className={styles.recipe} key={id}>
               <img className={styles.image} src={imageUrl} alt={`Image of ${name}`}/>
@@ -58,9 +81,9 @@ const Index = ({ title, description, ...props }) => {
                 <a href={canonicalUrl}>{name}</a>
               </h3>
               <div className={styles.graph}>
-                <div className={styles.value}>{votes}</div>
+                <div className={styles.value}>{Math.round(percentOfVote)}%</div>
                 <div className={styles.bar}>
-                  <div className={styles.innerBar} style={{width: `${width}%`}}>
+                  <div className={styles.innerBar} style={{width: `${percentOfVote}%`}}>
                   </div>
                 </div>
               </div>
@@ -68,6 +91,13 @@ const Index = ({ title, description, ...props }) => {
             </div>
           )
         })
+      }
+      {
+        isAdmin && (
+          <div className={styles.admin}>
+            <button onClick={onReset}>Reset</button>
+          </div>
+        )
       }
     </Layout>
   )

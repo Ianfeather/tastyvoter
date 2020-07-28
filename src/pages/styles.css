@@ -1,5 +1,6 @@
 :root {
   --blue: #18c1ee;
+  --imageHeight: 180px;
 }
 
 body {
@@ -15,4 +16,12 @@ body {
 
 .content {
   padding: 40px;
+}
+
+.header {
+  color: white;
+  font-size: 50px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 50px;
 }

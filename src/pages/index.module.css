@@ -8,7 +8,7 @@
 }
 
 .image {
-  width: 180px;
+  width: var(--imageHeight);
 }
 
 .name {
@@ -24,30 +24,52 @@
 
 .graph {
   flex: 1;
-  padding: 10px;
+  padding: 20px;
 }
 
 .button {
   background: #fe0;
-  height: 180px;
-  width: 180px;
+  height: var(--imageHeight);
+  width: var(--imageHeight);
   border: none;
   font-size: 40px;
   font-weight: 900;
+  outline: 0;
+}
+
+.value {
+  font-size: 30px;
+  font-weight: bold;
+  text-align: right;
+  margin-bottom: 10px;
 }
 
 .bar {
   height: 20px;
   width: 100%;
-  background: red;
+  background: #d5e9ef;
   position: relative;
 }
 
 .innerBar {
-  background: pink;
+  background: var(--blue);
   position: absolute;
   height: 20px;
   left: 0;
   top: 0;
   transition: width 0.2s ease;
+}
+
+.introTimerContainer {
+  height: calc((4 * var(--imageHeight)) + 30px);
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.introTimer {
+  color: white;
+  font-size: 200px;
+  font-weight: bold;
 }
