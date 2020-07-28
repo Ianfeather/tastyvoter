@@ -13,7 +13,7 @@ export default function Recipe({ name, id, canonicalUrl, imageUrl, votes, onVote
           <div className={styles.innerBar}>
           </div>
         </div>
-      </div>fa
+      </div>fefaae
       <button className={styles.button} onClick={(e) => onVote(e, id)}>Vote!</button>
     </div>
   )

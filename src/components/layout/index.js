@@ -19,7 +19,6 @@ export default function Layout({ children, pageTitle, description, ...props }) {
       </Head>
       <section className="layout">
         <Header title={pageTitle}/>
-        <div className={styles.foo}>FOO</div>
         <div className="content">{children}</div>
       </section>
     </>

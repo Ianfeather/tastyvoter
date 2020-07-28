@@ -1,7 +1,8 @@
+import styles from './index.module.css';
 import Amplify, { API, graphqlOperation } from "aws-amplify";
 import { useState, useEffect } from 'react';
-import Layout from '@components/layout'
-import Recipe from '@components/recipe'
+import Layout from '@components/layout';
+import Recipe from '@components/recipe';
 import * as queries from "../graphql/queries";
 import * as mutations from "../graphql/mutations";
 import * as subscriptions from "../graphql/subscriptions";
@@ -43,20 +44,30 @@ const Index = ({ title, description, ...props }) => {
     API.graphql(graphqlOperation(mutations.castVote, { input: { id } }));
   }
 
+  const totalVotes = recipes.reduce((acc, next) => acc + next.votes, 0);
+
   return (
     <Layout pageTitle={title} description={description}>
       {
-        recipes.map(({ name, id, canonicalUrl, imageUrl, votes }) => (
-          <Recipe
-            name={name}
-            id={id}
-            canonicalUrl={canonicalUrl}
-            imageUrl={imageUrl}
-            votes={votes}
-            onVote={onVote}
-            key={id}
-          />
-        ))
+        recipes.map(({ name, id, canonicalUrl, imageUrl, votes }) => {
+          const width = (votes / totalVotes) * 100;
+          return (
+            <div className={styles.recipe} key={id}>
+              <img className={styles.image} src={imageUrl} alt={`Image of ${name}`}/>
+              <h3 className={styles.name}>
+                <a href={canonicalUrl}>{name}</a>
+              </h3>
+              <div className={styles.graph}>
+                <div className={styles.value}>{votes}</div>
+                <div className={styles.bar}>
+                  <div className={styles.innerBar} style={{width: `${width}%`}}>
+                  </div>
+                </div>
+              </div>
+              <button className={styles.button} onClick={(e) => onVote(e, id)}>Vote!</button>
+            </div>
+          )
+        })
       }
     </Layout>
   )
