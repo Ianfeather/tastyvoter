@@ -18,7 +18,6 @@ export default function Layout({ children, pageTitle, description, ...props }) {
         <link href="/static/icon512.png" rel="apple-touch-startup-image" /> */}
       </Head>
       <section className="layout">
-        <Header title={pageTitle}/>
         <div className="content">{children}</div>
       </section>
     </>

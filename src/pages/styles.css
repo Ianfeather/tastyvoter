@@ -1,5 +1,7 @@
 :root {
   --blue: #18c1ee;
+  --yellow: #fe0;
+  --grey: #222;
   --imageHeight: 180px;
 }
 
@@ -14,7 +16,7 @@ body {
   box-sizing: border-box;
 }
 
-.content {
+.layout {
   padding: 40px;
 }
 
@@ -22,6 +24,4 @@ body {
   color: white;
   font-size: 50px;
   font-weight: bold;
-  text-align: center;
-  margin-top: 50px;
 }

@@ -14,7 +14,7 @@ const Index = ({ title, description, ...props }) => {
   const [recipes, setRecipes] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [introTimer, setIntroTimer] = useState(5);
-  const [votingTimer, setVotingTimer] = useState(60);
+  const [votingTimer, setVotingTimer] = useState(10);
 
   async function getRecipes() {
     const response = await API.graphql(graphqlOperation(queries.listRecipes))
@@ -36,6 +36,17 @@ const Index = ({ title, description, ...props }) => {
     }
   }, [introTimer]);
 
+  // Start the Voting Timer
+  useEffect(() => {
+    if (introTimer === 0 && votingTimer > 0) {
+      console.log('counting down')
+      let countdown = setTimeout(() => {
+        setVotingTimer(votingTimer - 1);
+      }, 1000);
+      return () => clearTimeout(countdown);
+    }
+  }, [introTimer, votingTimer]);
+
   useEffect(() => {
     const subscription = API.graphql(graphqlOperation(subscriptions.onCastVote)).subscribe({
       next: voteCasted => {
@@ -54,6 +65,7 @@ const Index = ({ title, description, ...props }) => {
   const onReset = async (e) => {
     e.preventDefault();
     setIntroTimer(5);
+    setVotingTimer(10);
     // would be nice to do these in one operation but aws docs aren't very scannable
     const newRecipes = await Promise.all(recipes.map(async ({id}) => {
       const { data } = await API.graphql(graphqlOperation(mutations.updateRecipe, { input: { id, votes: 0 } }));
@@ -63,18 +75,35 @@ const Index = ({ title, description, ...props }) => {
   }
 
   const totalVotes = recipes.reduce((acc, next) => acc + next.votes, 0);
+  const winningRecipe = recipes.reduce((acc, next) => next.votes > acc.votes ? next : acc, { votes: 0});
+
+  const state = {
+    intro: introTimer > 0,
+    voting: introTimer === 0 && votingTimer > 0,
+    complete: introTimer === 0 && votingTimer === 0
+  };
 
   return (
     <Layout pageTitle={title} description={description}>
+      <div className={styles.headerContainer}>
+        <header className="header">What are we eating?!</header>
+        {
+          state.voting && (
+            <div className={styles.votingTimer}>
+              {votingTimer}
+            </div>
+          )
+        }
+      </div>
       {
-        introTimer > 0 && (
+        state.intro && (
           <div className={styles.introTimerContainer}>
             <div className={styles.introTimer}>{introTimer}</div>
           </div>
         )
       }
       {
-        introTimer === 0 && recipes.map(({ name, id, canonicalUrl, imageUrl, votes }) => {
+        state.voting && recipes.map(({ name, id, canonicalUrl, imageUrl, votes }) => {
           const percentOfVote = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
           return (
             <div className={styles.recipe} key={id}>
@@ -93,6 +122,33 @@ const Index = ({ title, description, ...props }) => {
             </div>
           )
         })
+      }
+      {
+        state.complete && (
+          <div className={styles.winningContainer}>
+            <div className={styles.winningRecipe}>
+              <div className={styles.name}>
+                And the winner is...
+                <h3><a href={winningRecipe.canonicalUrl}>{winningRecipe.name}!</a></h3>
+              </div>
+              <img className={styles.winningImage} src={winningRecipe.imageUrl} alt={`Image of ${winningRecipe.name}`}/>
+
+            </div>
+
+            <div className={styles.rightColumn}>
+              <div className={styles.walmartMoneyPlease}>
+                <h3 className={styles.walmartTitle}>Get the winning ingredients 50% off thanks to our dear friends at walmart!</h3>
+                <button className={styles.walmartButton}>Buy now!</button>
+                <div className={styles.walmartDisclaimer}>(Walmart please, if you're listening, it's a great idea)</div>
+              </div>
+
+              <div className={styles.video}>
+                <img className={styles.videoImage} src="https://user-images.githubusercontent.com/814861/88680590-93453d80-d0e8-11ea-862d-70e3730f5f3a.png" alt="video still of cooking the recipe"/>
+              </div>
+            </div>
+          </div>
+
+        )
       }
       {
         isAdmin && (
