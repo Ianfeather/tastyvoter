@@ -1,0 +1,21 @@
+type Recipe @model {
+  id: ID!
+  name: String!
+  imageUrl: String
+  canonicalUrl: String
+  description: String
+  votes: Int!
+}
+
+input CastVoteInput {
+  id: ID!
+}
+
+type Mutation {
+  castVote(input: CastVoteInput!): Recipe
+}
+
+type Subscription {
+  onCastVote: Recipe
+    @aws_subscribe(mutations: ["castVote"])
+}

@@ -1,0 +1,15 @@
+{
+    "dev": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-tastyvoter-dev-161433-authRole",
+            "UnauthRoleArn": "arn:aws:iam::844072638685:role/amplify-tastyvoter-dev-161433-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::844072638685:role/amplify-tastyvoter-dev-161433-authRole",
+            "Region": "us-east-1",
+            "DeploymentBucketName": "amplify-tastyvoter-dev-161433-deployment",
+            "UnauthRoleName": "amplify-tastyvoter-dev-161433-unauthRole",
+            "StackName": "amplify-tastyvoter-dev-161433",
+            "StackId": "arn:aws:cloudformation:us-east-1:844072638685:stack/amplify-tastyvoter-dev-161433/e2a2b5b0-d01b-11ea-92f6-12301089d57f",
+            "AmplifyAppId": "d2ppr8u0lsg2nl"
+        }
+    }
+}

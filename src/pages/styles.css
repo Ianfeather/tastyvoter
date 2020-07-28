@@ -1,0 +1,18 @@
+:root {
+  --blue: #18c1ee;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+  font-family: 'Proxima Nova', 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  background: var(--blue);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.content {
+  padding: 40px;
+}

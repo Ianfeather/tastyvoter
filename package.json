@@ -1,0 +1,27 @@
+{
+  "name": "tastyvoter",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "export": "next export",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@zeit/next-source-maps": "0.0.3",
+    "aws-amplify": "^3.0.21",
+    "aws-amplify-react": "^4.1.20",
+    "eslint": "^7.5.0",
+    "next": "^9.4.4",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "react-typeahead": "^2.0.0-alpha.8",
+    "use-http": "^1.0.13"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "eslint-plugin-react": "^7.20.4"
+  }
+}
