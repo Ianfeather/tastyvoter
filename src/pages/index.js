@@ -51,13 +51,15 @@ const Index = ({ title, description, ...props }) => {
     API.graphql(graphqlOperation(mutations.castVote, { input: { id } }));
   }
 
-  const onReset = (e) => {
+  const onReset = async (e) => {
     e.preventDefault();
     setIntroTimer(5);
     // would be nice to do these in one operation but aws docs aren't very scannable
-    recipes.forEach(({id}) => {
-      API.graphql(graphqlOperation(mutations.updateRecipe, { input: { id, votes: 0 } }));
-    });
+    const newRecipes = await Promise.all(recipes.map(async ({id}) => {
+      const { data } = await API.graphql(graphqlOperation(mutations.updateRecipe, { input: { id, votes: 0 } }));
+      return data.updateRecipe;
+    }));
+    setRecipes(newRecipes);
   }
 
   const totalVotes = recipes.reduce((acc, next) => acc + next.votes, 0);
