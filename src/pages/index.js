@@ -10,7 +10,7 @@ import config from '../aws-exports';
 Amplify.configure(config);
 
 const INTRO_TIMER_DURATION = 5;
-const VOTING_TIMER_DURATION = 8;
+const VOTING_TIMER_DURATION = 20;
 
 const Index = ({ title, description, ...props }) => {
 
@@ -36,10 +36,26 @@ const Index = ({ title, description, ...props }) => {
     setRecipes(newRecipes);
   };
 
+  async function getGameInProgress() {
+    const { data } = await API.graphql(graphqlOperation(queries.listGames, { filter: { complete: { eq: false }}}));
+    if (!!data.listGames.items.length) {
+      // If there's a game in progress it means someone joined halfway through
+      // Figure out what the timer should be and update
+      const game = data.listGames.items[0];
+      const offsetSeconds = Math.round((Date.now() - new Date(game.createdAt)) / 1000);
+      if (offsetSeconds < 5) {
+        setIntroTimer(INTRO_TIMER_DURATION - offsetSeconds);
+      } else {
+        setIntroTimer(0);
+        setVotingTimer(VOTING_TIMER_DURATION + INTRO_TIMER_DURATION - offsetSeconds);
+      }
+      setGame(game);
+    }
+  }
+
   async function createGame() {
     if (!isAdmin) { return };
     const { data } = await API.graphql(graphqlOperation(mutations.createGame, { input: { complete: false }}));
-    setGame(data.createGame);
   };
 
   async function markGameAsComplete(winner) {
@@ -63,6 +79,7 @@ const Index = ({ title, description, ...props }) => {
   useEffect(() => {
     setIsAdmin(window.location.search.match(/admin=true/))
     getRecipes();
+    getGameInProgress();
   }, []);
 
   // Start the intro Timer
@@ -113,7 +130,7 @@ const Index = ({ title, description, ...props }) => {
         setIntroTimer(INTRO_TIMER_DURATION);
         setVotingTimer(VOTING_TIMER_DURATION);
         setEliminatedRecipes([]);
-        setGame(value.data.createGame);
+        setGame(value.data.onCreateGame);
       }
     });
     return () => subscription.unsubscribe()
