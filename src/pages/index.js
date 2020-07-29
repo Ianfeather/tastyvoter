@@ -12,24 +12,36 @@ Amplify.configure(config);
 const Index = ({ title, description, ...props }) => {
 
   let [recipes, setRecipes] = useState([]);
+  let [game, setGame] = useState(null);
   let [isAdmin, setIsAdmin] = useState(false);
   let [introTimer, setIntroTimer] = useState(5);
   let [votingTimer, setVotingTimer] = useState(10);
-  let [winningRecipe, setWinningRecipe] = useState({});
 
   async function getRecipes() {
-    const response = await API.graphql(graphqlOperation(queries.listRecipes))
+    const response = await API.graphql(graphqlOperation(queries.listRecipes));
     setRecipes(response.data.listRecipes.items);
   };
 
   async function clearRecipeVotes() {
+    if (!isAdmin) { return };
     // would be nice to do these in one operation but aws docs aren't very scannable
     const newRecipes = await Promise.all(recipes.map(async ({id}) => {
       const { data } = await API.graphql(graphqlOperation(mutations.updateRecipe, { input: { id, votes: 0 } }));
       return data.updateRecipe;
     }));
     setRecipes(newRecipes);
-  }
+  };
+
+  async function createGame() {
+    if (!isAdmin) { return };
+    const { data } = await API.graphql(graphqlOperation(mutations.createGame, { input: { complete: false }}));
+    setGame(data.createGame);
+  };
+
+  async function markGameAsComplete(winner) {
+    if (!isAdmin) { return };
+    API.graphql(graphqlOperation(mutations.updateGame, { input: { id: game.id, complete: true, winner: winner.id }}));
+  };
 
   useEffect(() => {
     setIsAdmin(window.location.search.match(/admin=true/))
@@ -38,27 +50,54 @@ const Index = ({ title, description, ...props }) => {
 
   // Start the intro Timer
   useEffect(() => {
+    if (!game) {
+      return;
+    }
     if (introTimer > 0) {
       let countdown = setTimeout(() => {
         setIntroTimer(introTimer - 1);
       }, 1000);
       return () => clearTimeout(countdown);
     }
-  }, [introTimer]);
+  }, [game, introTimer]);
 
   // Start the Voting Timer
   useEffect(() => {
+    if (!game) {
+      return;
+    }
     if (introTimer === 0 && votingTimer > 0) {
       let countdown = setTimeout(() => {
         setVotingTimer(votingTimer - 1);
       }, 1000);
       return () => clearTimeout(countdown);
     }
-    if (votingTimer === 0) {
-      setWinningRecipe(recipes.reduce((acc, next) => next.votes > acc.votes ? next : acc))
+    if (votingTimer === 0 && !game.complete) {
       clearRecipeVotes();
+      const winner = recipes.reduce((acc, next) => next.votes > acc.votes ? next : acc);
+      markGameAsComplete(winner);
     }
-  }, [introTimer, votingTimer]);
+  }, [game, introTimer, votingTimer, recipes]);
+
+  useEffect(() => {
+    const subscription = API.graphql(graphqlOperation(subscriptions.onCreateGame)).subscribe({
+      next: ({ value }) => setGame(value.data.onCreateGame)
+    });
+    return () => subscription.unsubscribe()
+  }, []);
+
+  useEffect(() => {
+    const subscription = API.graphql(graphqlOperation(subscriptions.onUpdateGame)).subscribe({
+      next: ({ value }) => {
+        const game = {
+          ...value.data.onUpdateGame,
+          winner: recipes.find(({id}) => id === value.data.onUpdateGame.winner)
+        };
+        setGame(game);
+      }
+    });
+    return () => subscription.unsubscribe()
+  }, [recipes]);
 
   useEffect(() => {
     const subscription = API.graphql(graphqlOperation(subscriptions.onCastVote)).subscribe({
@@ -75,19 +114,25 @@ const Index = ({ title, description, ...props }) => {
     API.graphql(graphqlOperation(mutations.castVote, { input: { id } }));
   }
 
-  const onReset = async (e) => {
+  const onReset = (e) => {
     e.preventDefault();
     setIntroTimer(5);
     setVotingTimer(10);
     clearRecipeVotes();
   }
 
+  const onStart = (e) => {
+    e.preventDefault();
+    createGame();
+  }
+
   const totalVotes = recipes.reduce((acc, next) => acc + next.votes, 0);
 
   const state = {
-    intro: introTimer > 0,
-    voting: introTimer === 0 && votingTimer > 0,
-    complete: introTimer === 0 && votingTimer === 0
+    pregame: !game,
+    intro: game && introTimer > 0,
+    voting: game && introTimer === 0 && votingTimer > 0,
+    complete: game && introTimer === 0 && votingTimer === 0
   };
 
   return (
@@ -103,9 +148,16 @@ const Index = ({ title, description, ...props }) => {
         }
       </div>
       {
+        state.pregame && (
+          <div className={`${styles.introContainer}`}>
+            <h2 className={styles.pregame}>Loading recipes...</h2>
+          </div>
+        )
+      }
+      {
         state.intro && (
-          <div className={styles.introTimerContainer}>
-            <div className={styles.introTimer}>{introTimer}</div>
+          <div className={`${styles.introContainer} ${styles.introTimerContainer}`}>
+            <h2 className={styles.introTimer}>{introTimer}</h2>
           </div>
         )
       }
@@ -131,14 +183,14 @@ const Index = ({ title, description, ...props }) => {
         })
       }
       {
-        state.complete && (
+        state.complete && game.winner && (
           <div className={styles.winningContainer}>
             <div className={styles.winningRecipe}>
               <div className={styles.name}>
                 And the winner is...
-                <h3><a href={winningRecipe.canonicalUrl}>{winningRecipe.name}!</a></h3>
+                <h3><a href={game.winner.canonicalUrl}>{game.winner.name}!</a></h3>
               </div>
-              <img className={styles.winningImage} src={winningRecipe.imageUrl} alt={`Image of ${winningRecipe.name}`}/>
+              <img className={styles.winningImage} src={game.winner.imageUrl} alt={`Image of ${game.winner.name}`}/>
 
             </div>
 
@@ -161,6 +213,7 @@ const Index = ({ title, description, ...props }) => {
         isAdmin && (
           <div className={styles.admin}>
             <button onClick={onReset}>Reset</button>
+            <button onClick={onStart}>Start</button>
           </div>
         )
       }

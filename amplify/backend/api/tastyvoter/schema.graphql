@@ -7,10 +7,11 @@ type Recipe @model {
   votes: Int!
 }
 
+# Winner should be a recipe here
 type Game @model {
   id: ID!
   complete: Boolean
-  recipes: [Recipe]
+  winner: String
 }
 
 input CastVoteInput {

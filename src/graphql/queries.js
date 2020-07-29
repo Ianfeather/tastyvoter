@@ -41,16 +41,7 @@ export const getGame = /* GraphQL */ `
     getGame(id: $id) {
       id
       complete
-      recipes {
-        id
-        name
-        imageUrl
-        canonicalUrl
-        description
-        votes
-        createdAt
-        updatedAt
-      }
+      winner
       createdAt
       updatedAt
     }
@@ -66,16 +57,7 @@ export const listGames = /* GraphQL */ `
       items {
         id
         complete
-        recipes {
-          id
-          name
-          imageUrl
-          canonicalUrl
-          description
-          votes
-          createdAt
-          updatedAt
-        }
+        winner
         createdAt
         updatedAt
       }

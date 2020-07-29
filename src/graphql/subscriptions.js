@@ -62,16 +62,7 @@ export const onCreateGame = /* GraphQL */ `
     onCreateGame {
       id
       complete
-      recipes {
-        id
-        name
-        imageUrl
-        canonicalUrl
-        description
-        votes
-        createdAt
-        updatedAt
-      }
+      winner
       createdAt
       updatedAt
     }
@@ -82,16 +73,7 @@ export const onUpdateGame = /* GraphQL */ `
     onUpdateGame {
       id
       complete
-      recipes {
-        id
-        name
-        imageUrl
-        canonicalUrl
-        description
-        votes
-        createdAt
-        updatedAt
-      }
+      winner
       createdAt
       updatedAt
     }
@@ -102,16 +84,7 @@ export const onDeleteGame = /* GraphQL */ `
     onDeleteGame {
       id
       complete
-      recipes {
-        id
-        name
-        imageUrl
-        canonicalUrl
-        description
-        votes
-        createdAt
-        updatedAt
-      }
+      winner
       createdAt
       updatedAt
     }
