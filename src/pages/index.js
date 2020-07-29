@@ -42,7 +42,7 @@ const Index = ({ title, description, ...props }) => {
       // Figure out what the timer should be and update
       const game = data.listGames.items[0];
       const offsetSeconds = Math.round((Date.now() - new Date(game.createdAt)) / 1000);
-      if (offsetSeconds < INTRO_TIMER_DURATION + VOTING_TIMER_DURATION) {
+      if (offsetSeconds > INTRO_TIMER_DURATION + VOTING_TIMER_DURATION) {
         setGame({ ...game, complete: true, winner: recipes.find(({id}) => id === winner.id)});
         return;
       }
