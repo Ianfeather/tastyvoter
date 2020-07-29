@@ -17,6 +17,11 @@
   animation: recipeIntro 0.5s ease;
 }
 
+.disabled {
+  background: #f5f2f2;
+  filter: grayscale(1);
+}
+
 .image {
   width: var(--imageHeight);
 }

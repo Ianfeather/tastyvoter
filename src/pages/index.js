@@ -9,13 +9,17 @@ import * as subscriptions from "../graphql/subscriptions";
 import config from '../aws-exports';
 Amplify.configure(config);
 
+const INTRO_TIMER_DURATION = 5;
+const VOTING_TIMER_DURATION = 30;
+
 const Index = ({ title, description, ...props }) => {
 
   let [recipes, setRecipes] = useState([]);
+  let [eliminatedRecipes, setEliminatedRecipes] = useState([]);
   let [game, setGame] = useState(null);
   let [isAdmin, setIsAdmin] = useState(false);
-  let [introTimer, setIntroTimer] = useState(5);
-  let [votingTimer, setVotingTimer] = useState(10);
+  let [introTimer, setIntroTimer] = useState(INTRO_TIMER_DURATION);
+  let [votingTimer, setVotingTimer] = useState(VOTING_TIMER_DURATION);
 
   async function getRecipes() {
     const response = await API.graphql(graphqlOperation(queries.listRecipes));
@@ -59,6 +63,7 @@ const Index = ({ title, description, ...props }) => {
       }, 1000);
       return () => clearTimeout(countdown);
     }
+
   }, [game, introTimer]);
 
   // Start the Voting Timer
@@ -66,24 +71,46 @@ const Index = ({ title, description, ...props }) => {
     if (!game) {
       return;
     }
+
+    if (votingTimer === Math.round((VOTING_TIMER_DURATION / 4) * 3)) {
+      setEliminatedRecipes([
+        ...eliminatedRecipes,
+        recipes.reduce((acc, next) => next.votes < acc.votes ? next : acc)
+      ]);
+    }
+
+    if (votingTimer === Math.round(VOTING_TIMER_DURATION / 2)) {
+      setEliminatedRecipes([
+        ...eliminatedRecipes,
+        recipes.reduce((acc, next) => {
+          if (eliminatedRecipes.some(r => r.id === next.id)) {
+            return acc;
+          }
+          return next.votes < acc.votes ? next : acc
+        })
+      ]);
+    }
+
+    if (votingTimer === 0 && !game.complete) {
+      clearRecipeVotes();
+      const winner = recipes.reduce((acc, next) => next.votes > acc.votes ? next : acc);
+      markGameAsComplete(winner);
+    }
+
     if (introTimer === 0 && votingTimer > 0) {
       let countdown = setTimeout(() => {
         setVotingTimer(votingTimer - 1);
       }, 1000);
       return () => clearTimeout(countdown);
     }
-    if (votingTimer === 0 && !game.complete) {
-      clearRecipeVotes();
-      const winner = recipes.reduce((acc, next) => next.votes > acc.votes ? next : acc);
-      markGameAsComplete(winner);
-    }
   }, [game, introTimer, votingTimer]);
 
   useEffect(() => {
     const subscription = API.graphql(graphqlOperation(subscriptions.onCreateGame)).subscribe({
       next: ({ value }) => {
-        setIntroTimer(5);
-        setVotingTimer(10);
+        setIntroTimer(INTRO_TIMER_DURATION);
+        setVotingTimer(VOTING_TIMER_DURATION);
+        setEliminatedRecipes([]);
         setGame(value.data.onCreateGame)
       }
     });
@@ -153,7 +180,7 @@ const Index = ({ title, description, ...props }) => {
       {
         state.pregame && (
           <div className={`${styles.introContainer}`}>
-            <h2 className={styles.pregame}>Loading recipes...</h2>
+            <h2 className={styles.pregame}>Waiting for game to begin...</h2>
           </div>
         )
       }
@@ -167,8 +194,9 @@ const Index = ({ title, description, ...props }) => {
       {
         state.voting && recipes.map(({ name, id, canonicalUrl, imageUrl, votes }) => {
           const percentOfVote = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+          const disabled = eliminatedRecipes.some(r => r.id === id);
           return (
-            <div className={styles.recipe} key={id}>
+            <div className={`${styles.recipe} ${disabled ? styles.disabled : ''}`} key={id}>
               <img className={styles.image} src={imageUrl} alt={`Image of ${name}`}/>
               <h3 className={styles.name}>
                 <a href={canonicalUrl}>{name}</a>
@@ -180,7 +208,7 @@ const Index = ({ title, description, ...props }) => {
                   </div>
                 </div>
               </div>
-              <button className={styles.button} onClick={(e) => onVote(e, id)}>Vote!</button>
+              <button disabled={disabled} className={styles.button} onClick={(e) => onVote(e, id)}>Vote!</button>
             </div>
           )
         })
