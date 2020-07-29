@@ -3,6 +3,7 @@ import Amplify, { API, graphqlOperation } from "aws-amplify";
 import { useState, useEffect } from 'react';
 import Layout from '../components/layout';
 import * as queries from "../graphql/queries";
+import * as customQueries from "../graphql/custom/queries";
 import * as mutations from "../graphql/mutations";
 import * as subscriptions from "../graphql/subscriptions";
 import config from '../aws-exports';
@@ -20,11 +21,6 @@ const Index = ({ title, description, ...props }) => {
   let [introTimer, setIntroTimer] = useState(INTRO_TIMER_DURATION);
   let [votingTimer, setVotingTimer] = useState(VOTING_TIMER_DURATION);
 
-  async function getRecipes() {
-    const response = await API.graphql(graphqlOperation(queries.listRecipes));
-    setRecipes(response.data.listRecipes.items);
-  };
-
   async function clearRecipeVotes() {
     if (!isAdmin) { return };
     // would be nice to do these in one operation but aws docs aren't very scannable
@@ -35,26 +31,28 @@ const Index = ({ title, description, ...props }) => {
     setRecipes(newRecipes);
   };
 
-  async function getGameInProgress() {
-    const { data } = await API.graphql(graphqlOperation(queries.listGames, { filter: { complete: { eq: false }}}));
-    if (!!data.listGames.items.length) {
-      // If there's a game in progress it means someone joined halfway through
-      // Figure out what the timer should be and update
-      const game = data.listGames.items[0];
+  async function getInitialState() {
+    const { data } = await API.graphql(graphqlOperation(customQueries.initialState));
+    const recipes = data.listRecipes.items;
+    const games = data.listGames.items;
+    setRecipes(recipes);
+
+    if (games.length) {
+      const game = games[0];
       const offsetSeconds = Math.round((Date.now() - new Date(game.createdAt)) / 1000);
       if (offsetSeconds > INTRO_TIMER_DURATION + VOTING_TIMER_DURATION) {
-        setGame({ ...game, complete: true, winner: recipes.find(({id}) => id === winner.id)});
+        setGame({ ...game, complete: true, winner: recipes.find(({id}) => id === game.winner.id)});
         setIntroTimer(0);
         setVotingTimer(0);
-        return;
-      }
-      if (offsetSeconds < 5) {
-        setIntroTimer(INTRO_TIMER_DURATION - offsetSeconds);
       } else {
-        setIntroTimer(0);
-        setVotingTimer(VOTING_TIMER_DURATION + INTRO_TIMER_DURATION - offsetSeconds);
+        if (offsetSeconds < 5) {
+          setIntroTimer(INTRO_TIMER_DURATION - offsetSeconds);
+        } else {
+          setIntroTimer(0);
+          setVotingTimer(VOTING_TIMER_DURATION + INTRO_TIMER_DURATION - offsetSeconds);
+        }
+        setGame(game);
       }
-      setGame(game);
     }
   }
 
@@ -85,8 +83,7 @@ const Index = ({ title, description, ...props }) => {
 
   useEffect(() => {
     setIsAdmin(window.location.search.match(/admin=true/))
-    getRecipes();
-    getGameInProgress();
+    getInitialState();
   }, []);
 
   // Start the intro Timer
