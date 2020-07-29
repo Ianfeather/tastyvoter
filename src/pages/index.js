@@ -48,7 +48,11 @@ const Index = ({ title, description, ...props }) => {
         setIntroTimer(0);
         setVotingTimer(VOTING_TIMER_DURATION + INTRO_TIMER_DURATION - offsetSeconds);
       }
-      setGame(game);
+      if (offsetSeconds < INTRO_TIMER_DURATION + VOTING_TIMER_DURATION) {
+        setGame({ ...game, complete: true, winner: recipes.find(({id}) => id === winner.id)});
+      } else {
+        setGame(game);
+      }
     }
   }
 
@@ -65,9 +69,11 @@ const Index = ({ title, description, ...props }) => {
 
   async function eliminateRecipe(recipes) {
     if (!isAdmin) { return }
-    const recipeToEliminate = recipes.filter(({id}) => !eliminatedRecipes.includes(id))
-      .reduce((acc, next) => next.votes < acc.votes ? next : acc);
-
+    const candidateRecipes = recipes.filter(({id}) => !eliminatedRecipes.includes(id))
+    if (!candidateRecipes.length) {
+      return;
+    }
+    const recipeToEliminate = candidateRecipes.reduce((acc, next) => next.votes < acc.votes ? next : acc);
     API.graphql(graphqlOperation(mutations.createRecipeGameEliminations, {input: {
       recipeGameEliminationsGameId: game.id,
       recipeGameEliminationsRecipeId: recipeToEliminate.id
@@ -170,6 +176,7 @@ const Index = ({ title, description, ...props }) => {
 
   const onVote = (e, id) => {
     e.preventDefault();
+    setRecipes(recipes.map(recipe => recipe.id !== id ? recipe : { ...recipe, votes: recipe.votes + 1 }));
     API.graphql(graphqlOperation(mutations.castVote, { input: { id } }));
   }
 
