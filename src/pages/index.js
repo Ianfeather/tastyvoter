@@ -1,8 +1,7 @@
 import styles from './index.module.css';
 import Amplify, { API, graphqlOperation } from "aws-amplify";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Layout from '../components/layout';
-import * as queries from "../graphql/queries";
 import * as customQueries from "../graphql/custom/queries";
 import * as mutations from "../graphql/mutations";
 import * as subscriptions from "../graphql/subscriptions";
@@ -12,7 +11,7 @@ Amplify.configure(config);
 const INTRO_TIMER_DURATION = 5;
 const VOTING_TIMER_DURATION = 20;
 
-const Index = ({ title, description, ...props }) => {
+const Index = () => {
   let [recipes, setRecipes] = useState([]);
   let [eliminatedRecipes, setEliminatedRecipes] = useState([]);
   let [game, setGame] = useState(null);
@@ -35,9 +34,6 @@ const Index = ({ title, description, ...props }) => {
 
     const offsetSeconds = Math.round((Date.now() - new Date(games[0].createdAt)) / 1000);
     if (offsetSeconds > INTRO_TIMER_DURATION + VOTING_TIMER_DURATION) {
-      setGame({ ...games[0], complete: true, winner: recipes.find(({id}) => id === games[0].winner.id)});
-      setIntroTimer(0);
-      setVotingTimer(0);
       return;
     }
 
@@ -50,42 +46,36 @@ const Index = ({ title, description, ...props }) => {
     setGame(game);
   }
 
-  async function clearRecipeVotes() {
-    if (!isAdmin) { return };
+  const clearRecipeVotes = useCallback(async () => {
+    if (!isAdmin) { return }
     // would be nice to do these in one operation but aws docs aren't very scannable
     const newRecipes = await Promise.all(recipes.map(async ({id}) => {
       const { data } = await API.graphql(graphqlOperation(mutations.updateRecipe, { input: { id, votes: 0 } }));
       return data.updateRecipe;
     }));
     setRecipes(newRecipes);
-  };
+  }, [isAdmin, recipes]);
 
-  async function markGameAsComplete() {
-    if (!isAdmin) { return };
+  const markGameAsComplete = useCallback(async () => {
+    if (!isAdmin) { return }
     const winner = recipes.reduce((acc, next) => next.votes > acc.votes ? next : acc);
     API.graphql(graphqlOperation(mutations.updateGame, { input: { id: game.id, complete: true, gameWinnerId: winner.id }}));
     setGame({ ...game, complete: true, winner: recipes.find(({id}) => id === winner.id)});
     clearRecipeVotes();
-  };
+  }, [clearRecipeVotes, game, isAdmin, recipes]);
 
-  async function eliminateRecipe(recipes) {
+  const eliminateRecipe = useCallback(async (recipe) => {
     if (!isAdmin) { return }
-    const candidateRecipes = recipes.filter(({id}) => !eliminatedRecipes.includes(id))
-    if (!candidateRecipes.length) {
-      return;
-    }
-    const recipeToEliminate = candidateRecipes.reduce((acc, next) => next.votes < acc.votes ? next : acc);
     API.graphql(graphqlOperation(mutations.createRecipeGameEliminations, {input: {
       recipeGameEliminationsGameId: game.id,
-      recipeGameEliminationsRecipeId: recipeToEliminate.id
+      recipeGameEliminationsRecipeId: recipe.id
     }}));
-    setEliminatedRecipes([...eliminatedRecipes, recipeToEliminate.id])
-  }
+  }, [game, isAdmin]);
 
   async function createGame() {
-    if (!isAdmin) { return };
+    if (!isAdmin) { return }
     API.graphql(graphqlOperation(mutations.createGame, { input: { complete: false }}));
-  };
+  }
 
 
   /*
@@ -106,26 +96,30 @@ const Index = ({ title, description, ...props }) => {
     }
   }, [game, introTimer]);
 
-  // The in-game timer and game logic
+  // The in-game timer
   useEffect(() => {
-    if (
-      votingTimer === Math.round(VOTING_TIMER_DURATION / 2) ||
-      votingTimer === Math.round((VOTING_TIMER_DURATION / 4) * 3)
-    ) {
-      // Eliminate a recipe at the 3/4 and halfway points
-      eliminateRecipe(recipes);
-    }
-
-    if (votingTimer === 0 && !game.complete) {
-      markGameAsComplete();
-    }
-
     if (game && introTimer === 0 && votingTimer > 0) {
       let timer = setTimeout(() => setVotingTimer(votingTimer - 1), 1000);
       return () => clearTimeout(timer);
     }
   }, [game, introTimer, votingTimer]);
 
+  // Game Logic that depends on the timer
+  useEffect(() => {
+    if (votingTimer === Math.round((VOTING_TIMER_DURATION / 4) * 3)) {
+      const sortedRecipesByVote = [...recipes].sort((a, b) => a.votes - b.votes);
+      eliminateRecipe(sortedRecipesByVote[0]);
+    }
+
+    if (votingTimer === Math.round(VOTING_TIMER_DURATION / 2)) {
+      const sortedRecipesByVote = [...recipes].sort((a, b) => a.votes - b.votes);
+      eliminateRecipe(sortedRecipesByVote[1]);
+    }
+
+    if (votingTimer === 0 && !game.complete) {
+      markGameAsComplete();
+    }
+  }, [votingTimer, eliminateRecipe, markGameAsComplete, recipes, game]);
 
   /*
    * Set up the subscriptions to remote data changes
@@ -148,6 +142,7 @@ const Index = ({ title, description, ...props }) => {
       next: ({ value }) => {
         const game = {
           ...value.data.onUpdateGame,
+          complete: true,
           winner: recipes.find(({id}) => id === value.data.onUpdateGame.winner.id)
         };
         setGame(game);
@@ -266,7 +261,7 @@ const Index = ({ title, description, ...props }) => {
               <div className={styles.walmartMoneyPlease}>
                 <h3 className={styles.walmartTitle}>Get the winning ingredients 50% off thanks to our dear friends at walmart!</h3>
                 <button className={styles.walmartButton}>Buy now!</button>
-                <div className={styles.walmartDisclaimer}>(Walmart please, if you're listening, it's a great idea)</div>
+                <div className={styles.walmartDisclaimer}>(Walmart please, if you&apos;re listening, it&apos;s a great idea)</div>
               </div>
               <div className={styles.video}>
                 <img className={styles.videoImage} src="https://user-images.githubusercontent.com/814861/88680590-93453d80-d0e8-11ea-862d-70e3730f5f3a.png" alt="video still of cooking the recipe"/>

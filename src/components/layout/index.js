@@ -1,8 +1,6 @@
 import Head from 'next/head'
-import Header from './Header'
-import styles from './index.module.css';
 
-export default function Layout({ children, ...props }) {
+export default function Layout({ children }) {
   return (
     <>
       <Head>
