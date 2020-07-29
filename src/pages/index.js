@@ -77,11 +77,15 @@ const Index = ({ title, description, ...props }) => {
       const winner = recipes.reduce((acc, next) => next.votes > acc.votes ? next : acc);
       markGameAsComplete(winner);
     }
-  }, [game, introTimer, votingTimer, recipes]);
+  }, [game, introTimer, votingTimer]);
 
   useEffect(() => {
     const subscription = API.graphql(graphqlOperation(subscriptions.onCreateGame)).subscribe({
-      next: ({ value }) => setGame(value.data.onCreateGame)
+      next: ({ value }) => {
+        setIntroTimer(5);
+        setVotingTimer(10);
+        setGame(value.data.onCreateGame)
+      }
     });
     return () => subscription.unsubscribe()
   }, []);
@@ -116,9 +120,8 @@ const Index = ({ title, description, ...props }) => {
 
   const onReset = (e) => {
     e.preventDefault();
-    setIntroTimer(5);
-    setVotingTimer(10);
     clearRecipeVotes();
+    createGame();
   }
 
   const onStart = (e) => {
