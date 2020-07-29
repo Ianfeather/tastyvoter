@@ -1,8 +1,7 @@
 import styles from './index.module.css';
 import Amplify, { API, graphqlOperation } from "aws-amplify";
 import { useState, useEffect } from 'react';
-import Layout from '@components/layout';
-import Recipe from '@components/recipe';
+import Layout from '../components/layout';
 import * as queries from "../graphql/queries";
 import * as mutations from "../graphql/mutations";
 import * as subscriptions from "../graphql/subscriptions";
