@@ -10,6 +10,14 @@ export const castVote = /* GraphQL */ `
       canonicalUrl
       description
       votes
+      games {
+        items {
+          id
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
@@ -27,6 +35,14 @@ export const createRecipe = /* GraphQL */ `
       canonicalUrl
       description
       votes
+      games {
+        items {
+          id
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
@@ -44,6 +60,14 @@ export const updateRecipe = /* GraphQL */ `
       canonicalUrl
       description
       votes
+      games {
+        items {
+          id
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
@@ -61,6 +85,146 @@ export const deleteRecipe = /* GraphQL */ `
       canonicalUrl
       description
       votes
+      games {
+        items {
+          id
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const createRecipeGameEliminations = /* GraphQL */ `
+  mutation CreateRecipeGameEliminations(
+    $input: CreateRecipeGameEliminationsInput!
+    $condition: ModelRecipeGameEliminationsConditionInput
+  ) {
+    createRecipeGameEliminations(input: $input, condition: $condition) {
+      id
+      game {
+        id
+        complete
+        winner {
+          id
+          name
+          imageUrl
+          canonicalUrl
+          description
+          votes
+          createdAt
+          updatedAt
+        }
+        eliminated {
+          nextToken
+        }
+        createdAt
+        updatedAt
+      }
+      recipe {
+        id
+        name
+        imageUrl
+        canonicalUrl
+        description
+        votes
+        games {
+          nextToken
+        }
+        createdAt
+        updatedAt
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const updateRecipeGameEliminations = /* GraphQL */ `
+  mutation UpdateRecipeGameEliminations(
+    $input: UpdateRecipeGameEliminationsInput!
+    $condition: ModelRecipeGameEliminationsConditionInput
+  ) {
+    updateRecipeGameEliminations(input: $input, condition: $condition) {
+      id
+      game {
+        id
+        complete
+        winner {
+          id
+          name
+          imageUrl
+          canonicalUrl
+          description
+          votes
+          createdAt
+          updatedAt
+        }
+        eliminated {
+          nextToken
+        }
+        createdAt
+        updatedAt
+      }
+      recipe {
+        id
+        name
+        imageUrl
+        canonicalUrl
+        description
+        votes
+        games {
+          nextToken
+        }
+        createdAt
+        updatedAt
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const deleteRecipeGameEliminations = /* GraphQL */ `
+  mutation DeleteRecipeGameEliminations(
+    $input: DeleteRecipeGameEliminationsInput!
+    $condition: ModelRecipeGameEliminationsConditionInput
+  ) {
+    deleteRecipeGameEliminations(input: $input, condition: $condition) {
+      id
+      game {
+        id
+        complete
+        winner {
+          id
+          name
+          imageUrl
+          canonicalUrl
+          description
+          votes
+          createdAt
+          updatedAt
+        }
+        eliminated {
+          nextToken
+        }
+        createdAt
+        updatedAt
+      }
+      recipe {
+        id
+        name
+        imageUrl
+        canonicalUrl
+        description
+        votes
+        games {
+          nextToken
+        }
+        createdAt
+        updatedAt
+      }
       createdAt
       updatedAt
     }
@@ -74,7 +238,27 @@ export const createGame = /* GraphQL */ `
     createGame(input: $input, condition: $condition) {
       id
       complete
-      winner
+      winner {
+        id
+        name
+        imageUrl
+        canonicalUrl
+        description
+        votes
+        games {
+          nextToken
+        }
+        createdAt
+        updatedAt
+      }
+      eliminated {
+        items {
+          id
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
@@ -88,7 +272,27 @@ export const updateGame = /* GraphQL */ `
     updateGame(input: $input, condition: $condition) {
       id
       complete
-      winner
+      winner {
+        id
+        name
+        imageUrl
+        canonicalUrl
+        description
+        votes
+        games {
+          nextToken
+        }
+        createdAt
+        updatedAt
+      }
+      eliminated {
+        items {
+          id
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }
@@ -102,7 +306,27 @@ export const deleteGame = /* GraphQL */ `
     deleteGame(input: $input, condition: $condition) {
       id
       complete
-      winner
+      winner {
+        id
+        name
+        imageUrl
+        canonicalUrl
+        description
+        votes
+        games {
+          nextToken
+        }
+        createdAt
+        updatedAt
+      }
+      eliminated {
+        items {
+          id
+          createdAt
+          updatedAt
+        }
+        nextToken
+      }
       createdAt
       updatedAt
     }

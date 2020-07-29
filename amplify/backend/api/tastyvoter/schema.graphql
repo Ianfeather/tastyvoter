@@ -5,13 +5,20 @@ type Recipe @model {
   canonicalUrl: String
   description: String
   votes: Int!
+  games: [RecipeGameEliminations] @connection(name: "RecipeEliminations")
 }
 
-# Winner should be a recipe here
+type RecipeGameEliminations @model (queries: null) {
+  id: ID!
+  game: Game @connection(name: "EliminatedRecipes")
+  recipe: Recipe @connection(name: "RecipeEliminations")
+}
+
 type Game @model {
   id: ID!
   complete: Boolean
-  winner: String
+  winner: Recipe @connection
+  eliminated: [RecipeGameEliminations] @connection(name: "EliminatedRecipes")
 }
 
 input CastVoteInput {
