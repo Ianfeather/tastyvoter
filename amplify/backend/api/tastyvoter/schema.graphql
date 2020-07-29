@@ -7,6 +7,12 @@ type Recipe @model {
   votes: Int!
 }
 
+type Game @model {
+  id: ID!
+  complete: Boolean
+  recipes: [Recipe]
+}
+
 input CastVoteInput {
   id: ID!
 }

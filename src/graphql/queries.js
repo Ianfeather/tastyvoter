@@ -36,3 +36,50 @@ export const listRecipes = /* GraphQL */ `
     }
   }
 `;
+export const getGame = /* GraphQL */ `
+  query GetGame($id: ID!) {
+    getGame(id: $id) {
+      id
+      complete
+      recipes {
+        id
+        name
+        imageUrl
+        canonicalUrl
+        description
+        votes
+        createdAt
+        updatedAt
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const listGames = /* GraphQL */ `
+  query ListGames(
+    $filter: ModelGameFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listGames(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        complete
+        recipes {
+          id
+          name
+          imageUrl
+          canonicalUrl
+          description
+          votes
+          createdAt
+          updatedAt
+        }
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;

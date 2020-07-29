@@ -57,3 +57,63 @@ export const onDeleteRecipe = /* GraphQL */ `
     }
   }
 `;
+export const onCreateGame = /* GraphQL */ `
+  subscription OnCreateGame {
+    onCreateGame {
+      id
+      complete
+      recipes {
+        id
+        name
+        imageUrl
+        canonicalUrl
+        description
+        votes
+        createdAt
+        updatedAt
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onUpdateGame = /* GraphQL */ `
+  subscription OnUpdateGame {
+    onUpdateGame {
+      id
+      complete
+      recipes {
+        id
+        name
+        imageUrl
+        canonicalUrl
+        description
+        votes
+        createdAt
+        updatedAt
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onDeleteGame = /* GraphQL */ `
+  subscription OnDeleteGame {
+    onDeleteGame {
+      id
+      complete
+      recipes {
+        id
+        name
+        imageUrl
+        canonicalUrl
+        description
+        votes
+        createdAt
+        updatedAt
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
