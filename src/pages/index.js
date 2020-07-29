@@ -10,7 +10,7 @@ import config from '../aws-exports';
 Amplify.configure(config);
 
 const INTRO_TIMER_DURATION = 5;
-const VOTING_TIMER_DURATION = 30;
+const VOTING_TIMER_DURATION = 8;
 
 const Index = ({ title, description, ...props }) => {
 
@@ -44,8 +44,21 @@ const Index = ({ title, description, ...props }) => {
 
   async function markGameAsComplete(winner) {
     if (!isAdmin) { return };
-    API.graphql(graphqlOperation(mutations.updateGame, { input: { id: game.id, complete: true, winner: winner.id }}));
+    API.graphql(graphqlOperation(mutations.updateGame, { input: { id: game.id, complete: true, gameWinnerId: winner.id }}));
+    setGame({ ...game, complete: true, winner: recipes.find(({id}) => id === winner.id)});
   };
+
+  async function eliminateRecipe(recipes) {
+    if (!isAdmin) { return }
+    const recipeToEliminate = recipes.filter(({id}) => !eliminatedRecipes.includes(id))
+      .reduce((acc, next) => next.votes < acc.votes ? next : acc);
+
+    API.graphql(graphqlOperation(mutations.createRecipeGameEliminations, {input: {
+      recipeGameEliminationsGameId: game.id,
+      recipeGameEliminationsRecipeId: recipeToEliminate.id
+    }}));
+    setEliminatedRecipes([...eliminatedRecipes, recipeToEliminate.id])
+  }
 
   useEffect(() => {
     setIsAdmin(window.location.search.match(/admin=true/))
@@ -73,22 +86,11 @@ const Index = ({ title, description, ...props }) => {
     }
 
     if (votingTimer === Math.round((VOTING_TIMER_DURATION / 4) * 3)) {
-      setEliminatedRecipes([
-        ...eliminatedRecipes,
-        recipes.reduce((acc, next) => next.votes < acc.votes ? next : acc)
-      ]);
+      eliminateRecipe(recipes);
     }
 
     if (votingTimer === Math.round(VOTING_TIMER_DURATION / 2)) {
-      setEliminatedRecipes([
-        ...eliminatedRecipes,
-        recipes.reduce((acc, next) => {
-          if (eliminatedRecipes.some(r => r.id === next.id)) {
-            return acc;
-          }
-          return next.votes < acc.votes ? next : acc
-        })
-      ]);
+      eliminateRecipe(recipes);
     }
 
     if (votingTimer === 0 && !game.complete) {
@@ -111,7 +113,7 @@ const Index = ({ title, description, ...props }) => {
         setIntroTimer(INTRO_TIMER_DURATION);
         setVotingTimer(VOTING_TIMER_DURATION);
         setEliminatedRecipes([]);
-        setGame(value.data.onCreateGame)
+        setGame(value.data.createGame);
       }
     });
     return () => subscription.unsubscribe()
@@ -122,7 +124,7 @@ const Index = ({ title, description, ...props }) => {
       next: ({ value }) => {
         const game = {
           ...value.data.onUpdateGame,
-          winner: recipes.find(({id}) => id === value.data.onUpdateGame.winner)
+          winner: recipes.find(({id}) => id === value.data.onUpdateGame.winner.id)
         };
         setGame(game);
       }
@@ -132,13 +134,23 @@ const Index = ({ title, description, ...props }) => {
 
   useEffect(() => {
     const subscription = API.graphql(graphqlOperation(subscriptions.onCastVote)).subscribe({
-      next: voteCasted => {
-        const { id, votes } = voteCasted.value.data.onCastVote;
+      next: ({ value }) => {
+        const { id, votes } = value.data.onCastVote;
         setRecipes(recipes.map(recipe => recipe.id !== id ? recipe : { ...recipe, votes }));
       }
     });
     return () => subscription.unsubscribe()
   }, [recipes]);
+
+  useEffect(() => {
+    const subscription = API.graphql(graphqlOperation(subscriptions.onCreateRecipeGameEliminations)).subscribe({
+      next: ({ value }) => {
+        const recipes = [ ...eliminatedRecipes, value.data.onCreateRecipeGameEliminations.recipe.id];
+        setEliminatedRecipes(recipes)
+      }
+    });
+    return () => subscription.unsubscribe()
+  }, [eliminatedRecipes])
 
   const onVote = (e, id) => {
     e.preventDefault();
@@ -194,7 +206,7 @@ const Index = ({ title, description, ...props }) => {
       {
         state.voting && recipes.map(({ name, id, canonicalUrl, imageUrl, votes }) => {
           const percentOfVote = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
-          const disabled = eliminatedRecipes.some(r => r.id === id);
+          const disabled = eliminatedRecipes.some(_id => _id === id);
           return (
             <div className={`${styles.recipe} ${disabled ? styles.disabled : ''}`} key={id}>
               <img className={styles.image} src={imageUrl} alt={`Image of ${name}`}/>
