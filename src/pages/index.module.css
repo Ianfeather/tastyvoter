@@ -23,7 +23,7 @@
 }
 
 .image {
-  width: var(--imageHeight);
+  width: var(--rowHeight);
 }
 
 .name {
@@ -44,12 +44,15 @@
 
 .button {
   background: var(--yellow);
-  height: var(--imageHeight);
-  width: var(--imageHeight);
+  height: var(--rowHeight);
+  width: var(--rowHeight);
   border: none;
   font-size: 40px;
   font-weight: 900;
   outline: 0;
+}
+.button.voted {
+  font-size: 30px;
 }
 
 .value {
@@ -88,8 +91,8 @@
 }
 
 .introContainer {
-  height: calc((4 * var(--imageHeight)) + 30px);
-  background: black;
+  height: 750px;
+  background-image: url('https://user-images.githubusercontent.com/814861/88863278-58cbc580-d1fa-11ea-9cbb-190c8cf5744d.jpg');
   display: flex;
   align-items: center;
   justify-content: center;
@@ -107,6 +110,17 @@
   animation: introContainer 5s ease;
 }
 
+.introTimerBg {
+  background: var(--blue);
+  border-radius: 50%;
+  width: 150px;
+  height: 150px;
+  margin-top: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 @keyframes introPulse {
   0% {
     transform: scale(1);
@@ -120,7 +134,8 @@
 }
 
 .introTimer {
-  font-size: 200px;
+  font-size: 100px;
+  padding-top: 5px;
   animation: introPulse 1s infinite;
 }
 

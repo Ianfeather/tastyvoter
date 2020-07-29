@@ -2,7 +2,7 @@
   --blue: #18c1ee;
   --yellow: #fe0;
   --grey: #222;
-  --imageHeight: 180px;
+  --rowHeight: 150px;
 }
 
 body {
@@ -17,11 +17,7 @@ body {
 }
 
 .layout {
-  padding: 40px;
-}
-
-.header {
-  color: white;
-  font-size: 50px;
-  font-weight: bold;
+  padding: 40px 0;
+  max-width: 1000px;
+  margin: 0 auto;
 }

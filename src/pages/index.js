@@ -106,12 +106,12 @@ const Index = () => {
 
   // Game Logic that depends on the timer
   useEffect(() => {
-    if (votingTimer === Math.round((VOTING_TIMER_DURATION / 4) * 3)) {
+    if (votingTimer === Math.round(VOTING_TIMER_DURATION / 2)) {
       const sortedRecipesByVote = [...recipes].sort((a, b) => a.votes - b.votes);
       eliminateRecipe(sortedRecipesByVote[0]);
     }
 
-    if (votingTimer === Math.round(VOTING_TIMER_DURATION / 2)) {
+    if (votingTimer === Math.round((VOTING_TIMER_DURATION / 4) * 1)) {
       const sortedRecipesByVote = [...recipes].sort((a, b) => a.votes - b.votes);
       eliminateRecipe(sortedRecipesByVote[1]);
     }
@@ -202,7 +202,6 @@ const Index = () => {
   return (
     <Layout>
       <div className={styles.headerContainer}>
-        <header className="header">What are we eating?!</header>
         {
           state.voting && (
             <div className={styles.votingTimer}>
@@ -214,14 +213,16 @@ const Index = () => {
       {
         state.pregame && (
           <div className={`${styles.introContainer}`}>
-            <h2 className={styles.pregame}>Waiting for game to begin...</h2>
+
           </div>
         )
       }
       {
         state.intro && (
           <div className={`${styles.introContainer} ${styles.introTimerContainer}`}>
-            <h2 className={styles.introTimer}>{introTimer}</h2>
+            <div className={styles.introTimerBg}>
+              <h2 className={styles.introTimer}>{introTimer}</h2>
+            </div>
           </div>
         )
       }
@@ -242,7 +243,7 @@ const Index = () => {
                   </div>
                 </div>
               </div>
-              <button disabled={disabled} className={styles.button} onClick={(e) => onVote(e, id)}>Vote!</button>
+              <button disabled={disabled} className={`${styles.button} ${ votes > 0 ? styles.voted : ''}`} onClick={(e) => onVote(e, id)}>{ votes > 0 ? 'Vote again!' : 'Vote!'}</button>
             </div>
           )
         })
