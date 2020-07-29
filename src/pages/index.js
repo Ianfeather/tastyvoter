@@ -13,13 +13,42 @@ const INTRO_TIMER_DURATION = 5;
 const VOTING_TIMER_DURATION = 20;
 
 const Index = ({ title, description, ...props }) => {
-
   let [recipes, setRecipes] = useState([]);
   let [eliminatedRecipes, setEliminatedRecipes] = useState([]);
   let [game, setGame] = useState(null);
+
   let [isAdmin, setIsAdmin] = useState(false);
   let [introTimer, setIntroTimer] = useState(INTRO_TIMER_DURATION);
   let [votingTimer, setVotingTimer] = useState(VOTING_TIMER_DURATION);
+
+  /*
+   * Functions called from useEffect hooks
+   */
+
+  async function getInitialState() {
+    const { data } = await API.graphql(graphqlOperation(customQueries.initialState));
+    const recipes = data.listRecipes.items;
+    setRecipes(recipes);
+
+    const games = data.listGames.items;
+    if (!games.length) { return; }
+
+    const offsetSeconds = Math.round((Date.now() - new Date(games[0].createdAt)) / 1000);
+    if (offsetSeconds > INTRO_TIMER_DURATION + VOTING_TIMER_DURATION) {
+      setGame({ ...games[0], complete: true, winner: recipes.find(({id}) => id === games[0].winner.id)});
+      setIntroTimer(0);
+      setVotingTimer(0);
+      return;
+    }
+
+    if (offsetSeconds < 5) {
+      setIntroTimer(INTRO_TIMER_DURATION - offsetSeconds);
+    } else {
+      setIntroTimer(0);
+      setVotingTimer(VOTING_TIMER_DURATION + INTRO_TIMER_DURATION - offsetSeconds);
+    }
+    setGame(game);
+  }
 
   async function clearRecipeVotes() {
     if (!isAdmin) { return };
@@ -31,40 +60,12 @@ const Index = ({ title, description, ...props }) => {
     setRecipes(newRecipes);
   };
 
-  async function getInitialState() {
-    const { data } = await API.graphql(graphqlOperation(customQueries.initialState));
-    const recipes = data.listRecipes.items;
-    const games = data.listGames.items;
-    setRecipes(recipes);
-
-    if (games.length) {
-      const game = games[0];
-      const offsetSeconds = Math.round((Date.now() - new Date(game.createdAt)) / 1000);
-      if (offsetSeconds > INTRO_TIMER_DURATION + VOTING_TIMER_DURATION) {
-        setGame({ ...game, complete: true, winner: recipes.find(({id}) => id === game.winner.id)});
-        setIntroTimer(0);
-        setVotingTimer(0);
-      } else {
-        if (offsetSeconds < 5) {
-          setIntroTimer(INTRO_TIMER_DURATION - offsetSeconds);
-        } else {
-          setIntroTimer(0);
-          setVotingTimer(VOTING_TIMER_DURATION + INTRO_TIMER_DURATION - offsetSeconds);
-        }
-        setGame(game);
-      }
-    }
-  }
-
-  async function createGame() {
+  async function markGameAsComplete() {
     if (!isAdmin) { return };
-    const { data } = await API.graphql(graphqlOperation(mutations.createGame, { input: { complete: false }}));
-  };
-
-  async function markGameAsComplete(winner) {
-    if (!isAdmin) { return };
+    const winner = recipes.reduce((acc, next) => next.votes > acc.votes ? next : acc);
     API.graphql(graphqlOperation(mutations.updateGame, { input: { id: game.id, complete: true, gameWinnerId: winner.id }}));
     setGame({ ...game, complete: true, winner: recipes.find(({id}) => id === winner.id)});
+    clearRecipeVotes();
   };
 
   async function eliminateRecipe(recipes) {
@@ -81,52 +82,54 @@ const Index = ({ title, description, ...props }) => {
     setEliminatedRecipes([...eliminatedRecipes, recipeToEliminate.id])
   }
 
+  async function createGame() {
+    if (!isAdmin) { return };
+    API.graphql(graphqlOperation(mutations.createGame, { input: { complete: false }}));
+  };
+
+
+  /*
+   * All useEffect hooks
+   */
+
+  // On Load, check for admin privileges and get initial state
   useEffect(() => {
     setIsAdmin(window.location.search.match(/admin=true/))
     getInitialState();
   }, []);
 
-  // Start the intro Timer
+  // The game intro countdown
   useEffect(() => {
-    if (!game) {
-      return;
+    if (game && introTimer > 0) {
+      let timer = setTimeout(() => setIntroTimer(introTimer - 1), 1000);
+      return () => clearTimeout(timer);
     }
-    if (introTimer > 0) {
-      let countdown = setTimeout(() => {
-        setIntroTimer(introTimer - 1);
-      }, 1000);
-      return () => clearTimeout(countdown);
-    }
-
   }, [game, introTimer]);
 
-  // Start the Voting Timer
+  // The in-game timer and game logic
   useEffect(() => {
-    if (!game) {
-      return;
-    }
-
-    if (votingTimer === Math.round((VOTING_TIMER_DURATION / 4) * 3)) {
-      eliminateRecipe(recipes);
-    }
-
-    if (votingTimer === Math.round(VOTING_TIMER_DURATION / 2)) {
+    if (
+      votingTimer === Math.round(VOTING_TIMER_DURATION / 2) ||
+      votingTimer === Math.round((VOTING_TIMER_DURATION / 4) * 3)
+    ) {
+      // Eliminate a recipe at the 3/4 and halfway points
       eliminateRecipe(recipes);
     }
 
     if (votingTimer === 0 && !game.complete) {
-      clearRecipeVotes();
-      const winner = recipes.reduce((acc, next) => next.votes > acc.votes ? next : acc);
-      markGameAsComplete(winner);
+      markGameAsComplete();
     }
 
-    if (introTimer === 0 && votingTimer > 0) {
-      let countdown = setTimeout(() => {
-        setVotingTimer(votingTimer - 1);
-      }, 1000);
-      return () => clearTimeout(countdown);
+    if (game && introTimer === 0 && votingTimer > 0) {
+      let timer = setTimeout(() => setVotingTimer(votingTimer - 1), 1000);
+      return () => clearTimeout(timer);
     }
   }, [game, introTimer, votingTimer]);
+
+
+  /*
+   * Set up the subscriptions to remote data changes
+   */
 
   useEffect(() => {
     const subscription = API.graphql(graphqlOperation(subscriptions.onCreateGame)).subscribe({
@@ -173,23 +176,25 @@ const Index = ({ title, description, ...props }) => {
     return () => subscription.unsubscribe()
   }, [eliminatedRecipes])
 
+  /*
+   * Event Listeners
+   */
+
   const onVote = (e, id) => {
     e.preventDefault();
     setRecipes(recipes.map(recipe => recipe.id !== id ? recipe : { ...recipe, votes: recipe.votes + 1 }));
     API.graphql(graphqlOperation(mutations.castVote, { input: { id } }));
   }
 
-  const onReset = (e) => {
+  const onStart = (e) => {
     e.preventDefault();
     clearRecipeVotes();
     createGame();
   }
 
-  const onStart = (e) => {
-    e.preventDefault();
-    createGame();
-  }
-
+  /*
+   * Some computed state
+   */
   const totalVotes = recipes.reduce((acc, next) => acc + next.votes, 0);
 
   const state = {
@@ -200,7 +205,7 @@ const Index = ({ title, description, ...props }) => {
   };
 
   return (
-    <Layout pageTitle={title} description={description}>
+    <Layout>
       <div className={styles.headerContainer}>
         <header className="header">What are we eating?!</header>
         {
@@ -256,29 +261,24 @@ const Index = ({ title, description, ...props }) => {
                 <h3><a href={game.winner.canonicalUrl}>{game.winner.name}!</a></h3>
               </div>
               <img className={styles.winningImage} src={game.winner.imageUrl} alt={`Image of ${game.winner.name}`}/>
-
             </div>
-
             <div className={styles.rightColumn}>
               <div className={styles.walmartMoneyPlease}>
                 <h3 className={styles.walmartTitle}>Get the winning ingredients 50% off thanks to our dear friends at walmart!</h3>
                 <button className={styles.walmartButton}>Buy now!</button>
                 <div className={styles.walmartDisclaimer}>(Walmart please, if you're listening, it's a great idea)</div>
               </div>
-
               <div className={styles.video}>
                 <img className={styles.videoImage} src="https://user-images.githubusercontent.com/814861/88680590-93453d80-d0e8-11ea-862d-70e3730f5f3a.png" alt="video still of cooking the recipe"/>
               </div>
             </div>
           </div>
-
         )
       }
       {
         isAdmin && (
           <div className={styles.admin}>
-            <button onClick={onReset}>Reset</button>
-            <button onClick={onStart}>Start</button>
+            <button onClick={onStart}>Start Game</button>
           </div>
         )
       }
@@ -287,12 +287,3 @@ const Index = ({ title, description, ...props }) => {
 }
 
 export default Index
-
-export async function getStaticProps() {
-  return {
-    props: {
-      title: "Choose your meal",
-      description: "50% off",
-    },
-  }
-}
