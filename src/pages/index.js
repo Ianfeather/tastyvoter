@@ -11,15 +11,25 @@ Amplify.configure(config);
 
 const Index = ({ title, description, ...props }) => {
 
-  const [recipes, setRecipes] = useState([]);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [introTimer, setIntroTimer] = useState(5);
-  const [votingTimer, setVotingTimer] = useState(10);
+  let [recipes, setRecipes] = useState([]);
+  let [isAdmin, setIsAdmin] = useState(false);
+  let [introTimer, setIntroTimer] = useState(5);
+  let [votingTimer, setVotingTimer] = useState(10);
+  let [winningRecipe, setWinningRecipe] = useState({});
 
   async function getRecipes() {
     const response = await API.graphql(graphqlOperation(queries.listRecipes))
     setRecipes(response.data.listRecipes.items);
   };
+
+  async function clearRecipeVotes() {
+    // would be nice to do these in one operation but aws docs aren't very scannable
+    const newRecipes = await Promise.all(recipes.map(async ({id}) => {
+      const { data } = await API.graphql(graphqlOperation(mutations.updateRecipe, { input: { id, votes: 0 } }));
+      return data.updateRecipe;
+    }));
+    setRecipes(newRecipes);
+  }
 
   useEffect(() => {
     setIsAdmin(window.location.search.match(/admin=true/))
@@ -39,11 +49,14 @@ const Index = ({ title, description, ...props }) => {
   // Start the Voting Timer
   useEffect(() => {
     if (introTimer === 0 && votingTimer > 0) {
-      console.log('counting down')
       let countdown = setTimeout(() => {
         setVotingTimer(votingTimer - 1);
       }, 1000);
       return () => clearTimeout(countdown);
+    }
+    if (votingTimer === 0) {
+      setWinningRecipe(recipes.reduce((acc, next) => next.votes > acc.votes ? next : acc))
+      clearRecipeVotes();
     }
   }, [introTimer, votingTimer]);
 
@@ -66,16 +79,10 @@ const Index = ({ title, description, ...props }) => {
     e.preventDefault();
     setIntroTimer(5);
     setVotingTimer(10);
-    // would be nice to do these in one operation but aws docs aren't very scannable
-    const newRecipes = await Promise.all(recipes.map(async ({id}) => {
-      const { data } = await API.graphql(graphqlOperation(mutations.updateRecipe, { input: { id, votes: 0 } }));
-      return data.updateRecipe;
-    }));
-    setRecipes(newRecipes);
+    clearRecipeVotes();
   }
 
   const totalVotes = recipes.reduce((acc, next) => acc + next.votes, 0);
-  const winningRecipe = recipes.reduce((acc, next) => next.votes > acc.votes ? next : acc, { votes: 0});
 
   const state = {
     intro: introTimer > 0,
