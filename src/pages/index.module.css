@@ -409,6 +409,29 @@
   text-align: center;
 }
 
+@keyframes videoAppear {
+  0%, 90% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.videoContainer {
+  position: absolute;
+  top: calc(var(--rowHeight) * 1.5);
+  padding-top: 10px;
+  opacity: 0;
+  animation: videoAppear 3s ease forwards;
+}
+
+.tomorrowText {
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+}
+
 .videoImage {
   width: 100%;
 }
