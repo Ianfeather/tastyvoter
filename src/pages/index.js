@@ -56,10 +56,10 @@ const Index = () => {
   }, [isAdmin, recipes]);
 
   const markGameAsComplete = useCallback(async () => {
-    if (!isAdmin) { return }
     const winner = recipes.reduce((acc, next) => next.votes > acc.votes ? next : acc);
-    API.graphql(graphqlOperation(mutations.updateGame, { input: { id: game.id, complete: true, gameWinnerId: winner.id }}));
     setGame({ ...game, complete: true, winner: recipes.find(({id}) => id === winner.id)});
+    if (!isAdmin) { return }
+    API.graphql(graphqlOperation(mutations.updateGame, { input: { id: game.id, complete: true, gameWinnerId: winner.id }}));
   }, [game, isAdmin, recipes]);
 
   const eliminateRecipe = useCallback(async (recipe) => {
