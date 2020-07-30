@@ -272,7 +272,7 @@ const Index = () => {
                   )
                 }
               </div>
-              { isEliminated && (
+              { isEliminated && !isWinner (
                 <div className={`${styles.label} ${styles.labelEliminated}`}>Not today :(</div>
               )}
               { isWinner && (
