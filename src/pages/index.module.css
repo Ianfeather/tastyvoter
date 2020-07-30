@@ -146,7 +146,7 @@
   animation: walmartIntro 2s ease-in forwards;
 }
 
-.winnerLabel {
+.label {
   position: absolute;
   top: 0;
   left: 0;
@@ -158,6 +158,13 @@
   opacity: 0;
 }
 
+.labelEliminated {
+  background-color: gray;
+  color: #ccc;
+  transform: rotate(-20deg) translateX(-20px) scale(1);
+  opacity: 1;
+}
+
 .disabled {
   background: #f5f2f2;
   filter: grayscale(1);
@@ -167,7 +174,7 @@
   width: var(--rowHeight);
 }
 
-.recipeContainer.winner .winnerLabel {
+.recipeContainer.winner .label {
   animation: winnerLabel 2s forwards;
 }
 
@@ -257,7 +264,7 @@
 }
 
 .introTimerContainer {
-  animation: introContainer 5s ease;
+  animation: introContainer 5s ease forwards;
 }
 
 .introTimerBg {
@@ -312,7 +319,7 @@
 }
 
 .votingTimer {
-  background: white;
+  background: #d7f7ff;
   height: 100px;
   width: 100px;
   border-radius: 50%;
@@ -320,6 +327,32 @@
   align-items: center;
   justify-content: center;
   font-size: 30px;
+  position: relative;
+  box-shadow: inset 0px 1px 3px -1px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes circle {
+  0% {
+    transform: rotate(90deg) translate(-50px) rotate(90deg);
+  }
+  100% {
+    transform: rotate(450deg) translate(-50px) rotate(-450deg);
+  }
+}
+
+.circle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: yellow;
+  border-radius: 50%;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  margin: auto;
+  animation: circle 1s ease infinite;
 }
 
 .outOfTime {

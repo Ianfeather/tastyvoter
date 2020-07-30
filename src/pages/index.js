@@ -211,6 +211,7 @@ const Index = () => {
                     Out of time!
                   </div> :
                   <div className={styles.votingTimer}>
+                    <div className={styles.circle} />
                     {votingTimer}
                   </div>
               }
@@ -237,8 +238,8 @@ const Index = () => {
       {
         state.voting && recipes.map(({ name, id, canonicalUrl, imageUrl, votes }, index) => {
           const percentOfVote = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
-          const disabled = eliminatedRecipes.some(_id => _id === id);
-          const buttonDisabled = disabled || game.complete;
+          const isEliminated = eliminatedRecipes.some(_id => _id === id);
+          const buttonDisabled = isEliminated || game.complete;
           const positionClassName = styles[`position${index}`];
           let isWinner = false;
           let completeClassName = '';
@@ -248,7 +249,7 @@ const Index = () => {
           }
           return (
             <div className={`${styles.recipeContainer} ${completeClassName} ${positionClassName}`} key={id}>
-              <div className={`${styles.recipe} ${disabled ? styles.disabled : ''}`}>
+              <div className={`${styles.recipe} ${isEliminated && !isWinner ? styles.disabled : ''}`}>
                 <img className={styles.image} src={imageUrl} alt={`Image of ${name}`}/>
                 <h3 className={styles.name}>
                   <a href={canonicalUrl}>{name}</a>
@@ -271,8 +272,11 @@ const Index = () => {
                   )
                 }
               </div>
+              { isEliminated && (
+                <div className={`${styles.label} ${styles.labelEliminated}`}>Not today :(</div>
+              )}
               { isWinner && (
-                <div className={styles.winnerLabel}>Winner!</div>
+                <div className={styles.label}>Winner!</div>
               )}
             </div>
           )
