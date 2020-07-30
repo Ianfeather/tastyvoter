@@ -244,12 +244,14 @@ const Index = () => {
         state.voting && recipes.map(({ name, id, canonicalUrl, imageUrl, votes }, index) => {
           const percentOfVote = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
           const disabled = eliminatedRecipes.some(_id => _id === id);
+          const buttonDisabled = disabled || game.complete;
           const positionClassName = styles[`position${index}`];
+          let isWinner = false;
           let completeClassName = '';
           if (game && game.complete) {
-            completeClassName = game.winner.id === id ? styles.winner : styles.loser;
+            isWinner = game && game.winner.id === id;
+            completeClassName = isWinner ? styles.winner : styles.loser;
           }
-          game && game.winner.id === id;
           return (
             <div className={`${styles.recipe} ${disabled ? styles.disabled : ''} ${completeClassName} ${positionClassName}`} key={id}>
               <img className={styles.image} src={imageUrl} alt={`Image of ${name}`}/>
@@ -263,7 +265,16 @@ const Index = () => {
                   </div>
                 </div>
               </div>
-              <button disabled={disabled} className={`${styles.button} ${ votes > 0 ? styles.voted : ''}`} onClick={(e) => onVote(e, id)}>{ votes > 0 ? 'Vote again!' : 'Vote!'}</button>
+              <button disabled={buttonDisabled} className={`${styles.button} ${ votes > 0 ? styles.voted : ''}`} onClick={(e) => onVote(e, id)}>{ votes > 0 ? 'Vote again!' : 'Vote!'}</button>
+              {
+                isWinner && (
+                  <div className={styles.walmartMoneyPlease}>
+                    <h3 className={styles.walmartTitle}>Get the winning ingredients 50% off thanks to our dear friends at walmart!</h3>
+                    <button className={styles.walmartButton}>Buy now!</button>
+                    <div className={styles.walmartDisclaimer}>(Walmart please, if you&apos;re listening, it&apos;s a great idea)</div>
+                  </div>
+                )
+              }
             </div>
           )
         })
@@ -277,11 +288,7 @@ const Index = () => {
               <div className={`${styles.winningName} ${styles.name}`}>
                 <h3><a href={game.winner.canonicalUrl}>{game.winner.name}!</a></h3>
               </div>
-              <div className={styles.walmartMoneyPlease}>
-                <h3 className={styles.walmartTitle}>Get the winning ingredients 50% off thanks to our dear friends at walmart!</h3>
-                <button className={styles.walmartButton}>Buy now!</button>
-                <div className={styles.walmartDisclaimer}>(Walmart please, if you&apos;re listening, it&apos;s a great idea)</div>
-              </div>
+
             </div>
           </div>
         )

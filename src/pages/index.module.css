@@ -15,7 +15,8 @@
   overflow: hidden;
   align-items: center;
   animation: recipeIntro 0.5s ease;
-  opacity: 1
+  opacity: 1;
+  position: relative;
 }
 
 @keyframes winner1 {
@@ -72,21 +73,59 @@
   }
 }
 
+@keyframes winnerImage {
+  70% {
+    width: var(--rowHeight);
+  }
+  85%, 100% {
+    width: calc(var(--rowHeight) * 1.5);
+  }
+}
+
+@keyframes winnerHide {
+  70% {
+    opacity: 1;
+  }
+  80%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes walmartIntro {
+  0% {
+    opacity: 0;
+  }
+  90% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.recipe.winner .button, .recipe.winner .graph {
+  animation: winnerHide 2s forwards;
+}
+
 .recipe.position1.winner {
-  animation: winner1 1.5s forwards;
+  animation: winner1 2s forwards;
 }
 
 .recipe.position2.winner {
-  animation: winner2 1.5s forwards;
+  animation: winner2 2s forwards;
 }
 
 .recipe.position3.winner {
-  animation: winner3 1.5s forwards;
+  animation: winner3 2s forwards;
 }
 
 .recipe.loser {
   transition: opacity 1.5s ease;
   opacity: 0;
+}
+
+.walmartMoneyPlease {
+  animation: walmartIntro 2s ease-in forwards;
 }
 
 .disabled {
@@ -96,6 +135,10 @@
 
 .image {
   width: var(--rowHeight);
+}
+
+.recipe.winner .image {
+  animation: winnerImage 2s forwards;
 }
 
 .name {
@@ -265,9 +308,11 @@
 }
 
 .walmartMoneyPlease {
+  position: absolute;
+  right: 20px;
+  top: 30px;
   background: white;
-  padding: 20px;
-  flex: 1;
+  width: 40%;
 }
 
 .walmartTitle {
