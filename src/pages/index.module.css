@@ -15,6 +15,78 @@
   overflow: hidden;
   align-items: center;
   animation: recipeIntro 0.5s ease;
+  opacity: 1
+}
+
+@keyframes winner1 {
+  60% {
+    transform: translateY(0);
+  }
+  82% {
+    transform: translateY(calc(-1 * var(--rowHeight) - 2px));
+    animation-timing-function: ease-in;
+  }
+  93% {
+    transform: translateY(calc(-1 * var(--rowHeight) - 6px));
+    animation-timing-function: ease-in;
+  }
+  75%, 87%, 100% {
+    transform: translateY(calc(-1 * var(--rowHeight) - 10px));
+    animation-timing-function: ease-out;
+  }
+}
+
+@keyframes winner2 {
+  60% {
+    transform: translateY(0);
+  }
+  82% {
+    transform: translateY(calc(-2 * var(--rowHeight) - 12px));
+    animation-timing-function: ease-in;
+  }
+  93% {
+    transform: translateY(calc(-2 * var(--rowHeight) - 16px));
+    animation-timing-function: ease-in;
+  }
+  75%, 87%, 100% {
+    transform: translateY(calc(-2 * var(--rowHeight) - 20px));
+    animation-timing-function: ease-out;
+  }
+}
+
+@keyframes winner3 {
+  60% {
+    transform: translateY(0);
+  }
+  82% {
+    transform: translateY(calc(-3 * var(--rowHeight) - 22px));
+    animation-timing-function: ease-in;
+  }
+  93% {
+    transform: translateY(calc(-3 * var(--rowHeight) - 26px));
+    animation-timing-function: ease-in;
+  }
+  75%, 87%, 100% {
+    transform: translateY(calc(-3 * var(--rowHeight) - 30px));
+    animation-timing-function: ease-out;
+  }
+}
+
+.recipe.position1.winner {
+  animation: winner1 1.5s forwards;
+}
+
+.recipe.position2.winner {
+  animation: winner2 1.5s forwards;
+}
+
+.recipe.position3.winner {
+  animation: winner3 1.5s forwards;
+}
+
+.recipe.loser {
+  transition: opacity 1.5s ease;
+  opacity: 0;
 }
 
 .disabled {
@@ -51,6 +123,7 @@
   font-weight: 900;
   outline: 0;
 }
+
 .button.voted {
   font-size: 30px;
 }
@@ -146,6 +219,21 @@
   align-items: center;
 }
 
+.title {
+  color: white;
+  font-weight: bold;
+  font-size: 40px;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 20px;
+  font-weight: bold;
+  background: yellow;
+  padding: 7px 20px;
+  display: inline-block;
+}
+
 .votingTimer {
   background: white;
   height: 100px;
@@ -160,16 +248,16 @@
 .winningRecipe {
   background: white;
   border-radius: 5px;
-  max-width: 500px;
-}
-
-.winningContainer {
   display: flex;
 }
 
 .winningImage {
-  width: 100%;
+  max-width: 200px;
   display: block;
+}
+
+.winningName {
+  flex: 2;
 }
 
 .rightColumn {
@@ -179,8 +267,7 @@
 .walmartMoneyPlease {
   background: white;
   padding: 20px;
-  height: 200px;
-  margin-bottom: 40px;
+  flex: 1;
 }
 
 .walmartTitle {
