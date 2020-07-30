@@ -217,9 +217,15 @@ const Index = () => {
                 <p className={styles.title}>What are we cooking?! Cast your vote.</p>
                 <p className={styles.subtitle}>Ingredients for the winning recipe will be 50% off at Walmart!</p>
               </div>
-              <div className={styles.votingTimer}>
-                {votingTimer}
-              </div>
+              {
+                game && game.complete ?
+                  <div className={`${styles.votingTimer} ${styles.outOfTime}`}>
+                    Out of time!
+                  </div> :
+                  <div className={styles.votingTimer}>
+                    {votingTimer}
+                  </div>
+              }
             </>
           )
         }
@@ -253,45 +259,36 @@ const Index = () => {
             completeClassName = isWinner ? styles.winner : styles.loser;
           }
           return (
-            <div className={`${styles.recipe} ${disabled ? styles.disabled : ''} ${completeClassName} ${positionClassName}`} key={id}>
-              <img className={styles.image} src={imageUrl} alt={`Image of ${name}`}/>
-              <h3 className={styles.name}>
-                <a href={canonicalUrl}>{name}</a>
-              </h3>
-              <div className={styles.graph}>
-                <div className={styles.value}>{Math.round(percentOfVote)}%</div>
-                <div className={styles.bar}>
-                  <div className={styles.innerBar} style={{width: `${percentOfVote}%`}}>
+            <div className={`${styles.recipeContainer} ${completeClassName} ${positionClassName}`}>
+              <div className={`${styles.recipe} ${disabled ? styles.disabled : ''}`} key={id}>
+                <img className={styles.image} src={imageUrl} alt={`Image of ${name}`}/>
+                <h3 className={styles.name}>
+                  <a href={canonicalUrl}>{name}</a>
+                </h3>
+                <div className={styles.graph}>
+                  <div className={styles.value}>{Math.round(percentOfVote)}%</div>
+                  <div className={styles.bar}>
+                    <div className={styles.innerBar} style={{width: `${percentOfVote}%`}}>
+                    </div>
                   </div>
                 </div>
+                <button disabled={buttonDisabled} className={`${styles.button} ${ votes > 0 ? styles.voted : ''}`} onClick={(e) => onVote(e, id)}>{ votes > 0 ? 'Vote again!' : 'Vote!'}</button>
+                {
+                  isWinner && (
+                    <div className={styles.walmartMoneyPlease}>
+                      <h3 className={styles.walmartTitle}>Get the winning ingredients 50% off thanks to our dear friends at walmart!</h3>
+                      <button className={styles.walmartButton}>Buy now!</button>
+                      <div className={styles.walmartDisclaimer}>(Walmart please, if you&apos;re listening, it&apos;s a great idea)</div>
+                    </div>
+                  )
+                }
               </div>
-              <button disabled={buttonDisabled} className={`${styles.button} ${ votes > 0 ? styles.voted : ''}`} onClick={(e) => onVote(e, id)}>{ votes > 0 ? 'Vote again!' : 'Vote!'}</button>
-              {
-                isWinner && (
-                  <div className={styles.walmartMoneyPlease}>
-                    <h3 className={styles.walmartTitle}>Get the winning ingredients 50% off thanks to our dear friends at walmart!</h3>
-                    <button className={styles.walmartButton}>Buy now!</button>
-                    <div className={styles.walmartDisclaimer}>(Walmart please, if you&apos;re listening, it&apos;s a great idea)</div>
-                  </div>
-                )
-              }
+              { isWinner && (
+                <div className={styles.winnerLabel}>Winner!</div>
+              )}
             </div>
           )
         })
-      }
-      {
-        state.complete && game.winner && (
-          <div className={styles.winningContainer}>
-            And the winner is...
-            <div className={styles.winningRecipe}>
-              <img className={styles.winningImage} src={game.winner.imageUrl} alt={`Image of ${game.winner.name}`}/>
-              <div className={`${styles.winningName} ${styles.name}`}>
-                <h3><a href={game.winner.canonicalUrl}>{game.winner.name}!</a></h3>
-              </div>
-
-            </div>
-          </div>
-        )
       }
       {
         isAdmin && (

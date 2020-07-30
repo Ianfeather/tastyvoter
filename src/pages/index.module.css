@@ -14,9 +14,12 @@
   border-radius: 5px;
   overflow: hidden;
   align-items: center;
-  animation: recipeIntro 0.5s ease;
   opacity: 1;
+}
+
+.recipeContainer {
   position: relative;
+  animation: recipeIntro 0.5s ease;
 }
 
 @keyframes winner1 {
@@ -91,6 +94,21 @@
   }
 }
 
+@keyframes winnerLabel {
+  0% {
+    opacity: 0;
+    transform: rotate(-20deg) translateX(-20px) scale(0.1);
+  }
+  90% {
+    opacity: 0;
+    transform: rotate(-20deg) translateX(-20px) scale(0.1);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-20deg) translateX(-20px) scale(1);
+  }
+}
+
 @keyframes walmartIntro {
   0% {
     opacity: 0;
@@ -103,29 +121,41 @@
   }
 }
 
-.recipe.winner .button, .recipe.winner .graph {
+.recipeContainer.winner .button, .recipeContainer.winner .graph {
   animation: winnerHide 2s forwards;
 }
 
-.recipe.position1.winner {
+.recipeContainer.position1.winner {
   animation: winner1 2s forwards;
 }
 
-.recipe.position2.winner {
+.recipeContainer.position2.winner {
   animation: winner2 2s forwards;
 }
 
-.recipe.position3.winner {
+.recipeContainer.position3.winner {
   animation: winner3 2s forwards;
 }
 
-.recipe.loser {
+.recipeContainer.loser {
   transition: opacity 1.5s ease;
   opacity: 0;
 }
 
 .walmartMoneyPlease {
   animation: walmartIntro 2s ease-in forwards;
+}
+
+.winnerLabel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: var(--yellow);
+  padding: 10px 20px;
+  font-size: 22px;
+  font-weight: bold;
+  text-transform: uppercase;
+  opacity: 0;
 }
 
 .disabled {
@@ -137,7 +167,11 @@
   width: var(--rowHeight);
 }
 
-.recipe.winner .image {
+.recipeContainer.winner .winnerLabel {
+  animation: winnerLabel 2s forwards;
+}
+
+.recipeContainer.winner .image {
   animation: winnerImage 2s forwards;
 }
 
@@ -286,6 +320,13 @@
   align-items: center;
   justify-content: center;
   font-size: 30px;
+}
+
+.outOfTime {
+  font-size: 18px;
+  text-transform: uppercase;
+  font-weight: bold;
+  text-align: center;
 }
 
 .winningRecipe {
