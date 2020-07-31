@@ -435,3 +435,9 @@
 .videoImage {
   width: 100%;
 }
+
+.admin {
+  position: absolute;
+  top: 0;
+  left: 0;
+}

@@ -309,14 +309,14 @@ const Index = () => {
             </div>
           )
         }
-        {
-          isAdmin && (
-            <div className={styles.admin}>
-              <button onClick={onStart}>Start Game</button>
-            </div>
-          )
-        }
       </div>
+      {
+        isAdmin && (
+          <div className={styles.admin}>
+            <button onClick={onStart}>Start Game</button>
+          </div>
+        )
+      }
     </Layout>
   )
 }
