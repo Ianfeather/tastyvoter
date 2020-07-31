@@ -152,6 +152,20 @@ const Index = () => {
   }, [recipes]);
 
   useEffect(() => {
+    const subscription = API.graphql(graphqlOperation(subscriptions.onUpdateRecipe)).subscribe({
+      next: ({ value }) => {
+        // We only update the recipes when we start a new game
+        // This isn't optimal but it's a quick workaround
+        // Ultimately votes shouldn't be stored with the recipe entity
+        setRecipes(recipes.map(recipe => {
+          return { ...recipe, votes: 0 };
+        }));
+      }
+    });
+    return () => subscription.unsubscribe()
+  }, [recipes]);
+
+  useEffect(() => {
     const subscription = API.graphql(graphqlOperation(subscriptions.onCastVote)).subscribe({
       next: ({ value }) => {
         const { id, votes } = value.data.onCastVote;
