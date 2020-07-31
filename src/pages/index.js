@@ -273,7 +273,7 @@ const Index = () => {
                 <div className={`${styles.recipe} ${isEliminated && !isWinner ? styles.disabled : ''}`}>
                   <img className={styles.image} src={imageUrl} alt={`Image of ${name}`}/>
                   <h3 className={styles.name}>
-                    <a target="_blank" href="#">{name}</a>
+                    <span>{name}</span>
                   </h3>
                   <div className={styles.graph}>
                     <div className={styles.value}>{Math.round(percentOfVote)}%</div>
