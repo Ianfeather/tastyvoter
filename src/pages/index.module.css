@@ -423,7 +423,7 @@
   top: calc(var(--rowHeight) * 1.5);
   padding-top: 10px;
   opacity: 0;
-  animation: videoAppear 3s ease forwards;
+  animation: videoAppear 5s ease forwards;
 }
 
 .tomorrowText {
