@@ -16,6 +16,7 @@ const VOTING_TIMER_DURATION = 20;
 const Index = () => {
   let [recipes, setRecipes] = useState([]);
   let [eliminatedRecipes, setEliminatedRecipes] = useState([]);
+  let [localVotes, setLocalVotes] = useState({});
   // let [game, setGame] = useState({ id:1, complete: true, winner: {"id":"7fbaa316-9084-43f0-be01-4d90854562aa","name":"Chicken Tikka Biryani","imageUrl":"https://img.buzzfeed.com/video-api-prod/assets/e0852050640d4474aaf3542d61f2568a/FB.jpg","canonicalUrl":"https://tasty.co/recipe/chicken-tikka-biryani","description":"","votes":11,"games":{"items":[{"id":"d2eb8f13-4f18-490c-830a-6b45a9cae9a2","createdAt":"2020-07-29T23:34:32.088Z","updatedAt":"2020-07-29T23:34:32.088Z"},{"id":"b6a1617b-f3a7-49f5-9c17-1081f043c654","createdAt":"2020-07-29T23:34:31.999Z","updatedAt":"2020-07-29T23:34:31.999Z"},{"id":"3dfbd118-c2f3-4622-9161-26afe31654de","createdAt":"2020-07-29T23:34:31.827Z","updatedAt":"2020-07-29T23:34:31.827Z"},{"id":"d1904084-e7c0-4df7-ad9d-e515ad522fd7","createdAt":"2020-07-29T22:05:07.907Z","updatedAt":"2020-07-29T22:05:07.907Z"},{"id":"19417351-ff76-413e-ad83-1419fa43becc","createdAt":"2020-07-29T23:34:32.695Z","updatedAt":"2020-07-29T23:34:32.695Z"},{"id":"39da8460-82ab-47aa-bb89-69fc56598b98","createdAt":"2020-07-29T22:02:17.163Z","updatedAt":"2020-07-29T22:02:17.163Z"},{"id":"89e19706-384f-4b38-ac18-c286787ab5e9","createdAt":"2020-07-29T23:28:30.229Z","updatedAt":"2020-07-29T23:28:30.229Z"},{"id":"62387132-8db1-44b7-abf9-06f8b11071fd","createdAt":"2020-07-29T21:59:17.510Z","updatedAt":"2020-07-29T21:59:17.510Z"},{"id":"cb9269d9-c9b3-491c-a3a2-2e2ea5934b95","createdAt":"2020-07-29T23:34:32.382Z","updatedAt":"2020-07-29T23:34:32.382Z"},{"id":"cbf0ca0e-ff18-4a3e-830b-8b416251629c","createdAt":"2020-07-29T23:28:29.688Z","updatedAt":"2020-07-29T23:28:29.688Z"},{"id":"61a1cef9-adb3-4cd0-b269-bff52b885d73","createdAt":"2020-07-29T22:32:22.713Z","updatedAt":"2020-07-29T22:32:22.713Z"},{"id":"958ae91a-4f93-45aa-bd47-f41db4cd638c","createdAt":"2020-07-29T22:08:56.762Z","updatedAt":"2020-07-29T22:08:56.762Z"},{"id":"d2ebe843-82bf-4d0d-9971-aafc0d2e0c22","createdAt":"2020-07-29T23:34:32.232Z","updatedAt":"2020-07-29T23:34:32.232Z"},{"id":"8a7dc3aa-b70c-4b62-9506-2ace92c80592","createdAt":"2020-07-29T23:28:29.247Z","updatedAt":"2020-07-29T23:28:29.247Z"},{"id":"20903ff2-80ff-48a0-a6a0-5a40d96b9893","createdAt":"2020-07-29T23:28:30.174Z","updatedAt":"2020-07-29T23:28:30.174Z"},{"id":"f5383ee4-3a25-4456-a871-ec60fec58d4d","createdAt":"2020-07-29T22:09:59.979Z","updatedAt":"2020-07-29T22:09:59.979Z"},{"id":"55fec767-559b-49ec-9bfd-1442a868fd7b","createdAt":"2020-07-29T23:28:29.770Z","updatedAt":"2020-07-29T23:28:29.770Z"},{"id":"fd2d684c-eff9-4f57-af76-13718393ab0c","createdAt":"2020-07-29T22:04:19.519Z","updatedAt":"2020-07-29T22:04:19.519Z"},{"id":"e4ff04c3-834f-447e-988d-abe1ae1717ff","createdAt":"2020-07-29T22:00:59.544Z","updatedAt":"2020-07-29T22:00:59.544Z"}],"nextToken":null},"createdAt":"2020-07-28T09:34:08.859Z","updatedAt":"2020-07-30T08:35:20.318Z"}});
   let [game, setGame] = useState(null);
   let [isAdmin, setIsAdmin] = useState(false);
@@ -191,6 +192,7 @@ const Index = () => {
 
   const onVote = (e, id) => {
     e.preventDefault();
+    setLocalVotes({...localVotes, [id]: true});
     setRecipes(recipes.map(recipe => recipe.id !== id ? recipe : { ...recipe, votes: recipe.votes + 1 }));
     API.graphql(graphqlOperation(mutations.castVote, { input: { id } }));
   }
@@ -259,6 +261,7 @@ const Index = () => {
             const isEliminated = eliminatedRecipes.some(_id => _id === id);
             const buttonDisabled = isEliminated || game.complete;
             const positionClassName = styles[`position${index}`];
+            const alreadyVoted = !!localVotes[id];
             let isWinner = false;
             let completeClassName = '';
             if (game && game.complete) {
@@ -279,7 +282,7 @@ const Index = () => {
                       </div>
                     </div>
                   </div>
-                  <button disabled={buttonDisabled} className={`${styles.button} ${ votes > 0 ? styles.voted : ''}`} onClick={(e) => onVote(e, id)}>{ votes > 0 ? 'Vote again!' : 'Vote!'}</button>
+                  <button disabled={buttonDisabled} className={`${styles.button} ${ votes > 0 ? styles.voted : ''}`} onClick={(e) => onVote(e, id)}>{ alreadyVoted ? 'Vote again!' : 'Vote!'}</button>
                   {
                     isWinner && (
                       <div className={styles.walmartMoneyPlease}>
